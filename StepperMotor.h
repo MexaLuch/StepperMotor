@@ -39,6 +39,9 @@ private:
     // ISR callback для таймера
     static bool IRAM_ATTR timerCallback(void* param);
     
+    // Дружественная функция для доступа к приватным полям
+    friend void assignTimerToMotor(StepperMotor* motor, timer_group_t group, timer_idx_t timer);
+    
 public:
     // Конструктор
     StepperMotor(int ena, int dir, int pul);

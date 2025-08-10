@@ -8,7 +8,7 @@
   ENA=12, DIR=14, PUL=27
 */
 
-#include "StepperMotor.h"
+#include <StepperMotor.h>
 
 StepperMotor motor(12, 14, 27);  // ENA=12, DIR=14, PUL=27
 

@@ -1,4 +1,5 @@
 #include "StepperMotor.h"
+#include "driver/gpio.h"
 
 // Глобальные переменные для управления таймерами
 static StepperMotor* motorInstances[4] = {nullptr, nullptr, nullptr, nullptr};
@@ -19,9 +20,9 @@ bool IRAM_ATTR StepperMotor::timerCallback(void* param) {
     
     // Быстрое управление GPIO через маску
     if (motor->pulseState) {
-        GPIO.out_w1ts.val = motor->pulPinMask;  // Установить HIGH
+        GPIO.out_w1ts = motor->pulPinMask;  // Установить HIGH
     } else {
-        GPIO.out_w1tc.val = motor->pulPinMask;  // Установить LOW
+        GPIO.out_w1tc = motor->pulPinMask;  // Установить LOW
         
         // Уменьшаем счетчик шагов
         motor->stepsToGo--;
@@ -110,7 +111,7 @@ void StepperMotor::go(long steps, int period) {
     // Настраиваем таймер
     timer_set_divider(timerGroup, timerIndex, 80); // 80MHz / 80 = 1MHz
     timer_set_alarm_value(timerGroup, timerIndex, pulsePeriod); // Период в микросекундах
-    timer_set_auto_reload(timerGroup, timerIndex, true);
+    timer_set_auto_reload(timerGroup, timerIndex, TIMER_AUTORELOAD_EN);
     
     // Запускаем таймер
     timer_start(timerGroup, timerIndex);
@@ -174,13 +175,13 @@ void assignTimerToMotor(StepperMotor* motor, timer_group_t group, timer_idx_t ti
     if (motor) {
         // Инициализируем конкретный таймер, если он еще не использовался
         if (!timerUsed[group][timer]) {
-            timer_config_t config = {
-                .divider = 80,
-                .counter_dir = TIMER_COUNT_UP,
-                .counter_en = TIMER_PAUSE,
-                .alarm_en = TIMER_ALARM_EN,
-                .auto_reload = TIMER_AUTORELOAD_EN
-            };
+            timer_config_t config = {};
+            config.divider = 80;
+            config.counter_dir = TIMER_COUNT_UP;
+            config.counter_en = TIMER_PAUSE;
+            config.alarm_en = TIMER_ALARM_EN;
+            config.auto_reload = TIMER_AUTORELOAD_EN;
+            config.intr_type = TIMER_INTR_LEVEL;
             timer_init(group, timer, &config);
             timerUsed[group][timer] = true;
         }
